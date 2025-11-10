@@ -1,0 +1,433 @@
+---
+description: Python project structure and organization guidelines
+globs: ["**/*.py", "**/*.md", "**/requirements*.txt", "**/setup.py", "**/pyproject.toml"]
+alwaysApply: true
+---
+
+# Python Project Structure Rules
+
+This document defines the standard project structure and organization guidelines for Python projects.
+
+## Directory Structure
+
+### Standard Project Layout
+
+```
+project_root/
+├── src/                          # Source code (for packages) OR root-level modules
+│   └── package_name/             # Main package (if using src layout)
+│       ├── __init__.py
+│       ├── module1.py
+│       ├── module2.py
+│       └── subpackage/
+│           ├── __init__.py
+│           └── module3.py
+├── tests/                        # Test files
+│   ├── __init__.py              # Required if tests import from src
+│   ├── test_module1.py
+│   ├── test_module2.py
+│   └── fixtures/                # Test fixtures and data
+│       └── sample_data.json
+├── docs/                        # Documentation (optional)
+│   ├── api/
+│   └── guides/
+├── scripts/                     # Utility scripts (optional)
+│   └── setup_environment.sh
+├── data/                        # Data files (optional, add to .gitignore if large)
+│   ├── raw/
+│   └── processed/
+├── .cursor/                     # Cursor IDE rules
+│   └── rules/
+├── .github/                     # GitHub workflows (optional)
+│   └── workflows/
+├── README.md
+├── requirements.txt             # OR pyproject.toml
+├── setup.py                     # OR pyproject.toml (for packages)
+├── pytest.ini                   # Pytest configuration
+├── .gitignore
+├── .pre-commit-config.yaml      # Pre-commit hooks (optional)
+└── pyproject.toml               # Modern Python project config (optional)
+```
+
+### When to Use src/ Layout vs Root-Level Modules
+
+**Use src/ layout (package structure) when:**
+- Building a library or package for distribution
+- Project has multiple related modules that form a cohesive package
+- Need to test package installation
+- Project will be installed via pip
+
+**Use root-level modules when:**
+- Simple scripts or applications
+- Single-purpose tools
+- Quick prototypes or interview practice projects
+- No need for package distribution
+
+**Current project structure:** Root-level modules (appropriate for interview practice)
+
+## File Organization
+
+### Module Files
+
+#### Naming
+- Use **snake_case** for module names: `data_loader.py`, `diversity_optimizer.py`
+- Module names should be descriptive and indicate their purpose
+- Avoid abbreviations unless widely understood: `utils.py` ✅, `d_opt.py` ❌
+
+#### Size and Responsibility
+- Keep modules focused on a single responsibility or related functionality
+- Split modules when they exceed ~500 lines
+- Group related functions and classes together
+- If a module has many classes, consider splitting by class or functionality
+
+**Example:**
+```python
+# ✅ Good - focused module
+# data_loader.py - handles all data loading operations
+def load_search_results(filepath: str) -> List[SearchResult]:
+    ...
+
+def load_ground_truth(filepath: str) -> List[GroundTruthEntry]:
+    ...
+
+# ❌ Bad - mixing concerns
+# data_loader.py - should not contain optimization logic
+def load_search_results(filepath: str) -> List[SearchResult]:
+    ...
+
+def optimize_diversity(results: List[SearchResult]) -> List[SearchResult]:
+    ...  # This belongs in diversity_optimizer.py
+```
+
+### Package Structure
+
+#### When to Create a Package (Directory with __init__.py)
+
+Create a package when:
+- You have 3+ related modules that form a logical group
+- Modules share common utilities or types
+- You want to organize code hierarchically
+- Related functionality spans multiple files
+
+**Example:**
+```
+# ✅ Good - package structure for related modules
+optimization/
+├── __init__.py          # Exports public API
+├── diversity.py         # Diversity optimization
+├── ranking.py           # Ranking algorithms
+└── utils.py             # Shared utilities
+```
+
+#### __init__.py Best Practices
+
+```python
+# ✅ Good - clean public API
+"""Optimization package for search result optimization."""
+
+from .diversity import optimize_diversity
+from .ranking import rank_results
+
+__all__ = ['optimize_diversity', 'rank_results']
+
+# ❌ Bad - exposing internal implementation
+from .diversity import _internal_helper  # Private function
+```
+
+### Test Organization
+
+#### Test File Naming
+- Mirror source structure: `test_<module_name>.py`
+- Place tests in `tests/` directory
+- Use descriptive test names: `test_data_loader.py`, `test_diversity_optimizer.py`
+
+#### Test Structure
+```
+tests/
+├── __init__.py                    # Required if importing from src
+├── test_module1.py               # Tests for module1.py
+├── test_module2.py               # Tests for module2.py
+├── conftest.py                   # Shared pytest fixtures
+├── fixtures/                     # Test data files
+│   ├── sample_results.json
+│   └── ground_truth.json
+└── integration/                  # Integration tests (optional)
+    └── test_end_to_end.py
+```
+
+#### Test File Organization
+- One test file per source module
+- Group related test cases in the same file
+- Use `conftest.py` for shared fixtures
+- Keep test data in `tests/fixtures/` directory
+
+**Example:**
+```python
+# tests/test_data_loader.py
+"""Tests for data_loader module."""
+
+import pytest
+from data_loader import load_search_results, SearchResult
+
+def test_load_search_results_valid_file():
+    """Test loading valid search results file."""
+    ...
+
+def test_load_search_results_invalid_file():
+    """Test handling of invalid file."""
+    ...
+```
+
+## Import Organization
+
+### Import Path Rules
+
+#### Absolute Imports (Preferred)
+- Use absolute imports for clarity and to avoid import errors
+- For root-level modules: `from data_loader import load_search_results`
+- For packages: `from package.module import function`
+
+```python
+# ✅ Good - absolute imports
+from data_loader import load_search_results, SearchResult
+from diversity_optimizer import optimize_diversity_per_query
+from evaluation import evaluate_optimization
+
+# ❌ Bad - relative imports in root-level modules
+from .data_loader import load_search_results
+```
+
+#### Relative Imports (Use in Packages Only)
+- Use relative imports only within packages
+- Use `from .module import function` for same-package imports
+- Use `from ..parent import function` for parent-package imports
+
+```python
+# ✅ Good - relative imports within package
+# In optimization/diversity.py
+from .utils import validate_input
+from ..data_loader import SearchResult
+
+# ❌ Bad - relative imports at root level
+# In main.py (root level)
+from .data_loader import load_search_results
+```
+
+### Circular Import Prevention
+
+- Avoid circular dependencies between modules
+- If circular dependency exists, refactor to extract shared code
+- Use type hints with `from __future__ import annotations` to defer evaluation
+
+```python
+# ✅ Good - avoiding circular imports
+# main.py
+from data_loader import SearchResult
+from diversity_optimizer import optimize_diversity
+
+# diversity_optimizer.py
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from data_loader import SearchResult
+
+def optimize_diversity(results: list['SearchResult']) -> list['SearchResult']:
+    ...
+```
+
+## Configuration Files
+
+### File Placement
+
+#### Root-Level Configuration
+- `requirements.txt` or `pyproject.toml` - dependencies
+- `pytest.ini` or `pyproject.toml` - test configuration
+- `.gitignore` - git ignore rules
+- `README.md` - project documentation
+- `setup.py` or `pyproject.toml` - package setup (if distributing)
+
+#### Project-Specific Configuration
+- Create `config/` directory for multiple config files
+- Use environment variables for sensitive data
+- Keep config files out of version control if they contain secrets
+
+```
+config/
+├── default.yaml              # Default configuration
+├── development.yaml          # Development overrides
+└── .gitignore                # Ignore local configs
+```
+
+### Configuration File Standards
+
+**requirements.txt:**
+```
+# Pin versions for reproducibility
+numpy==1.24.0
+pandas==2.0.0
+pytest==7.4.0
+```
+
+**pytest.ini:**
+```ini
+[pytest]
+testpaths = tests
+python_files = test_*.py
+python_classes = Test*
+python_functions = test_*
+addopts = -v --tb=short
+```
+
+## Documentation Structure
+
+### README.md
+- Place at project root
+- Include: project description, setup instructions, usage examples
+- Keep it up-to-date with code changes
+
+### Docstrings
+- Module-level docstrings at top of file
+- Class and function docstrings (see style guide)
+- Use Google-style docstrings
+
+### Additional Documentation
+- Create `docs/` directory for extensive documentation
+- Use Markdown for documentation files
+- Organize by topic: `docs/api/`, `docs/guides/`, `docs/examples/`
+
+## Code Organization Principles
+
+### Separation of Concerns
+
+**Layer your code:**
+1. **Data Layer** - Loading, parsing, validation (`data_loader.py`)
+2. **Business Logic** - Core algorithms and processing (`diversity_optimizer.py`)
+3. **Evaluation/Output** - Metrics, reporting (`evaluation.py`)
+4. **Entry Point** - CLI, main script (`main.py`)
+
+### Module Cohesion
+
+**Group related functionality:**
+- Functions that operate on the same data structures
+- Classes that share a common purpose
+- Utilities that serve a specific domain
+
+**Example:**
+```python
+# ✅ Good - cohesive module
+# evaluation.py - all evaluation-related functions
+def calculate_metrics(results, ground_truth):
+    ...
+
+def format_report(metrics):
+    ...
+
+def compare_results(baseline, optimized):
+    ...
+
+# ❌ Bad - mixed concerns
+# evaluation.py - mixing evaluation with data loading
+def calculate_metrics(results, ground_truth):
+    ...
+
+def load_data_from_file(filepath):  # Should be in data_loader.py
+    ...
+```
+
+### When to Create New Modules
+
+Create a new module when:
+- A file exceeds ~500 lines
+- Functionality is clearly distinct from current module
+- You need to avoid circular dependencies
+- Code serves a different purpose (e.g., data loading vs. optimization)
+
+**Refactoring signals:**
+- Module has multiple unrelated responsibilities
+- Imports are becoming complex
+- Testing becomes difficult due to tight coupling
+- Code is hard to navigate
+
+## Special Files and Directories
+
+### __init__.py
+- Required for Python packages
+- Can be empty or contain package initialization
+- Use to define `__all__` for public API
+- Import commonly used items for convenience
+
+```python
+# ✅ Good - package __init__.py
+"""Data loading utilities."""
+
+from .loader import load_search_results, load_ground_truth
+from .types import SearchResult, GroundTruthEntry
+
+__all__ = [
+    'load_search_results',
+    'load_ground_truth',
+    'SearchResult',
+    'GroundTruthEntry',
+]
+```
+
+### conftest.py
+- Place in `tests/` directory
+- Contains shared pytest fixtures
+- Automatically discovered by pytest
+
+```python
+# tests/conftest.py
+"""Shared pytest fixtures."""
+
+import pytest
+from data_loader import load_search_results
+
+@pytest.fixture
+def sample_results():
+    """Load sample search results for testing."""
+    return load_search_results('tests/fixtures/sample_results.json')
+```
+
+### .gitignore
+- Always include: `__pycache__/`, `*.pyc`, `*.pyo`, `*.pyd`, `.Python`
+- Include virtual environment: `venv/`, `env/`, `.venv/`
+- Include IDE files: `.vscode/`, `.idea/`, `*.swp`
+- Include data files if large: `data/raw/`, `*.csv` (if large)
+
+## Migration Guidelines
+
+### When Refactoring Structure
+
+**From root-level to package structure:**
+1. Create `src/package_name/` directory
+2. Move modules into package
+3. Add `__init__.py` files
+4. Update imports in all files
+5. Update test imports
+6. Update documentation
+
+**Splitting large modules:**
+1. Identify distinct responsibilities
+2. Create new module files
+3. Move related functions/classes
+4. Update imports
+5. Update tests
+
+## Best Practices Summary
+
+1. **Keep it simple** - Start with root-level modules, add structure as needed
+2. **One responsibility** - Each module should have a clear, single purpose
+3. **Mirror tests** - Test structure should mirror source structure
+4. **Clear imports** - Use absolute imports, avoid circular dependencies
+5. **Document structure** - Update README when structure changes
+6. **Consistent naming** - Follow naming conventions throughout
+7. **Logical grouping** - Group related functionality together
+8. **Avoid over-engineering** - Don't create packages for simple projects
+
+## Project-Specific Notes
+
+For this project (canva-interview-practice):
+- Current structure (root-level modules) is appropriate
+- Tests mirror source files in `tests/` directory
+- Keep modules focused: data loading, optimization, evaluation
+- If adding new features, consider if they fit existing modules or need new ones

@@ -1,0 +1,12 @@
+# This file can be generated with: pip freeze > requirements.txt
+# Or use: pip install -e ".[dev]" to install from pyproject.toml
+#
+# For production dependencies only:
+# pip install -e "." && pip freeze | grep -v "^-e" > requirements.txt
+#
+# For development dependencies:
+# pip install -e ".[dev]" && pip freeze > requirements-dev.txt
+
+# Note: Dependencies are managed in pyproject.toml
+# Run: pip install -e ".[dev]" to install all dependencies
+
