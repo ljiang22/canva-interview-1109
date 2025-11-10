@@ -47,7 +47,6 @@
 - [ ] Static typing with mypy (no errors; specify strictness)
 - [ ] Unit + integration tests (pytest) with coverage ≥ [90%]
 - [ ] Reproducible env: venv + pinned deps ([requirements.txt | pyproject.lock])
-- [ ] CI pipeline runs: format, lint, type-check, tests on push/PR
 - [ ] Compatibility: Python [exact version], OS [linux] parity
 - [ ] Security: no secrets in repo, dependency audit, safe file I/O
 - [ ] Maintainability: Google-style docstrings, function length < 50 lines
@@ -86,16 +85,15 @@
 ---
 
 #### Step 2: Configuration Files
-**Purpose:** Centralize project configuration for consistency and CI.
+**Purpose:** Centralize project configuration for consistency.
 
 **Actions:**
-1. Add `pytest.ini` (testpaths, addopts: `-v --tb=short --cov`)
-2. Configure `pyproject.toml` OR individual configs:
+1. Configure `pyproject.toml` OR individual configs:
    - Black (line-length 88, target-version)
    - Ruff (rules, select/ignore, isort settings)
    - Mypy (`mypy.ini`): disallow-any-generics, warn-redundant-casts, etc.
    - Coverage (`.coveragerc`): omit tests, config for branch coverage
-3. Create `.pre-commit-config.yaml` with hooks
+2. Create `.pre-commit-config.yaml` with hooks
 
 **Dependencies:** Step 1
 
@@ -148,13 +146,12 @@
 
 ---
 
-#### Step 6: Quality Gates & CI
+#### Step 6: Quality Gates
 **Purpose:** Enforce code quality and prevent regressions.
 
 **Actions:**
 1. Run `black .`, `ruff .`, `mypy .`
 2. Ensure `pytest` coverage ≥ [90%]
-3. Validate CI passes on branch and PR
 
 **Dependencies:** Steps 1–5
 
@@ -178,7 +175,6 @@
 | `mypy.ini` (if not in pyproject) | Type checker config | strictness toggles |
 | `ruff.toml` (if not in pyproject) | Linting config | rule selection, isort |
 | `.coveragerc` | Coverage config | omit patterns, branch=True |
-| `.github/workflows/ci.yml` | CI pipeline | setup-python, cache, checks |
 | `tests/conftest.py` | Shared fixtures | reusable fixtures, hooks |
 | `tests/test_[module].py` | Unit tests | test functions and parametrization |
 
@@ -249,7 +245,7 @@
 
 ### Coverage & Quality
 - Enforce coverage ≥ [90%] overall and on changed files
-- Run `pytest -n auto --cov` locally and in CI
+- Run `pytest -n auto --cov` locally
 
 ### Manual Testing
 **Steps:**
@@ -272,7 +268,6 @@
 - [ ] No linter errors; no TODOs left in code
 - [ ] Code reviewed and approved
 - [ ] Documentation updated (README, API docs)
-- [ ] CI green on default branch
 
 ### Acceptance Criteria
 - [ ] [Specific measurable outcome 1]
@@ -285,10 +280,10 @@
 
 | Risk | Likelihood | Impact | Mitigation Strategy |
 |------|------------|--------|---------------------|
-| Dependency conflicts | Med | Med | Pin versions; lockfile; CI matrix |
-| Env mismatch (local vs CI) | Med | Med | Use exact Python version; document setup |
+| Dependency conflicts | Med | Med | Pin versions; lockfile |
+| Env mismatch | Med | Med | Use exact Python version; document setup |
 | Flaky tests | Med | Med | Deterministic fixtures; seed RNG; isolate IO |
-| Type hint drift | Low | Low | Enforce mypy in CI; pre-commit gate |
+| Type hint drift | Low | Low | Enforce mypy with pre-commit gate |
 | Performance regressions | Low | Med | Add benchmarks; monitor hot paths |
 
 ---

@@ -46,7 +46,7 @@ This project follows PEP 8 and additional best practices for maintainable, reada
       gender_labels=labels,
       target_ratio=0.5
   )
-  
+
   # ❌ Bad
   result = calculate_diversity_score(search_results=results, gender_labels=labels, target_ratio=0.5)
   ```
@@ -61,7 +61,7 @@ This project follows PEP 8 and additional best practices for maintainable, reada
       if not image.is_valid():
           return None
       return process_valid_image(image)
-  
+
   # ❌ Bad
   def process_image(image):
       if image:
@@ -78,7 +78,7 @@ This project follows PEP 8 and additional best practices for maintainable, reada
 - Use `List[Type]`, `Dict[KeyType, ValueType]` from `typing` module
   ```python
   from typing import List, Dict, Optional
-  
+
   def optimize_trading(
       results: List[Dict[str, float]],
       sharp_ratio: float,
@@ -92,7 +92,7 @@ This project follows PEP 8 and additional best practices for maintainable, reada
 - Use `TypedDict` for dictionaries with known structure
   ```python
   from typing import TypedDict
-  
+
   class SemanticSearchResult(TypedDict):
       input_id: str
       importance: float
@@ -110,17 +110,17 @@ This project follows PEP 8 and additional best practices for maintainable, reada
       user_field: str = 'user A'
   ) -> float:
       """Calculate sentiment score for post A.
-      
+
       Args:
           results: List of search result dictionaries, each containing sentiment information
           sentiment_field: Key name in result dictionaries for sentiment
-      
+
       Returns:
           sentiment score between -1.0 and 1.0
-      
+
       Raises:
           ValueError: If results list is empty or sentiment_field not found in results
-      
+
       Example:
           >>> results = [{'post 1': '-1'}, {'post 2': '1'}, {'post 3': '0'}]
           >>> calculate_sentiment_score(results)
@@ -137,7 +137,7 @@ This project follows PEP 8 and additional best practices for maintainable, reada
   # ✅ Good - explains why
   # Use greedy algorithm here because exact solution is O(2^n)
   selected = semantic_search(results)
-  
+
   # ❌ Bad - explains obvious what
   # Loop through results
   for result in results:
@@ -158,12 +158,12 @@ This project follows PEP 8 and additional best practices for maintainable, reada
   from typing import List, Dict, Optional
   import json
   import os
-  
+
   # Third-party
   import numpy as np
   import pandas as pd
   from sklearn.metrics import accuracy_score
-  
+
   # Local
   from .utils import load_data
   from .evaluation import calculate_metrics
@@ -190,7 +190,7 @@ This project follows PEP 8 and additional best practices for maintainable, reada
   except json.JSONDecodeError as e:
       logger.error(f"Invalid JSON in {filepath}: {e}")
       raise ValueError(f"Could not parse results file: {filepath}") from e
-  
+
   # ❌ Bad
   try:
       results = load_results_from_file(filepath)
@@ -214,10 +214,10 @@ This project follows PEP 8 and additional best practices for maintainable, reada
   # ✅ Good
   MAX_ATTEMPT_TIMES = 5
   SCROLLING_THRESHOLD = 20
-  
+
   if len(results) > MAX_ATTEMPT_TIMES:
       results = results[:MAX_ATTEMPT_TIMES]
-  
+
   # ❌ Bad
   if len(results) > 100:
       results = results[:100]
@@ -235,7 +235,7 @@ This project follows PEP 8 and additional best practices for maintainable, reada
   )
   if is_valid_result:
       process_result(result)
-  
+
   # ❌ Bad
   if result['importance'] > 0.5:
       if result['distance'] in ['10', '20', '30']:
@@ -249,7 +249,7 @@ This project follows PEP 8 and additional best practices for maintainable, reada
   ```python
   # ✅ Good - simple transformation
   memory_ids = [result['memory_id'] for result in results if result['distance'] > 30]
-  
+
   # ✅ Good - complex logic
   processed_results = []
   for result in results:
@@ -270,7 +270,7 @@ This project follows PEP 8 and additional best practices for maintainable, reada
       """Test sentiment calculation with empty results."""
       with pytest.raises(ValueError):
           calculate_sentiment_score([])
-  
+
   def test_calculate_sentiment_score_balanced():
       """Test sentiment calculation with balanced importance distribution."""
       results = [
